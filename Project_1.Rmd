@@ -1,0 +1,102 @@
+---
+title: "Project_1"
+author: "Meredith Palmore"
+date: "9/13/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load required packages and import data
+
+```{r load}
+library(tidyverse)
+
+#install.packages("tidytuesdayR")
+
+tuesdata <- tidytuesdayR::tt_load('2020-01-21')
+
+spotify_songs <- tuesdata$spotify_songs
+
+glimpse(spotify_songs)
+
+head(spotify_songs)
+
+```
+
+# Part 1: Explore data
+
+### 1. How many songs are in each genre?
+
+```{r genre}
+
+genres <- spotify_songs %>% group_by(playlist_genre) 
+
+summarize(genres, "total_songs" = length(track_id))
+
+
+```
+See the above output for the number of songs per genre.
+
+### 2. What is the average value of energy and acousticness in the latin genre in this dataset?
+
+```{r summarize_genres}
+genres %>% filter(playlist_genre == "latin") %>% summarize("avg_energy"=mean(energy), "avg_acousticness"=mean(acousticness))
+
+
+```
+
+The average value of energy is about 0.71 on a scale of 0 to 1. 
+The average value of acousticness is about 0.21 on a scale of 0 to 1. 
+
+### 3. Calculate the average duration of song (in minutes) across all subgenres. Which subgenre has the longest song on average?
+
+```{r summarize_duration}
+
+subgenres <- spotify_songs %>% group_by(playlist_subgenre)
+
+average_minutes <- subgenres %>% summarize("avg_min"=mean(duration_ms)/1000/60)
+
+average_minutes
+
+average_minutes %>% filter(avg_min==max(average_minutes$avg_min))
+
+```
+On average, "New Jack Swing" subgenre has the longest song.
+
+### 4. Make two boxplots side-by-side of the danceability of songs stratifying by whether a song has a fast or slow tempo. Define fast tempo as any song that has a tempo above its median value. On average, which songs are more danceable?
+
+```{r boxplots}
+
+# Step 1: Categorize the data into fast or not
+    spotify_songs <- spotify_songs %>%
+     mutate(is_fast = case_when(
+                    tempo > median(tempo) ~ "Yes",
+                    tempo <= median(tempo) ~ "No"
+            ))
+    
+    ## Check to make sure that the categorization into tempo categories was performed          properly:
+    
+    median(spotify_songs$tempo)
+    
+    spotify_songs$tempo[1:5]
+    
+    spotify_songs$is_fast[1:5]
+    
+    ## Yes!
+
+# Step 2: Generate box-plots of danceability of the songs stratified by groups:
+    
+    spotify_songs %>% ggplot(aes(x=is_fast, y=danceability)) + geom_boxplot(fill="forest green") + labs(title="Danceability versus Tempo Categories")
+
+
+
+```
+
+Surprisingly, slower songs tend to be more danceable on average. 
+
+# Part 2: Convert nontidy data into tidy data
+
+
