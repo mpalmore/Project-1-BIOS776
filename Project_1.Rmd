@@ -106,8 +106,7 @@ Surprisingly, slower songs tend to be more danceable on average.
 
 ```{r unique}
 
-distinct_songs <- spotify_songs %>% distinct(track_name, track_artist)
-
+distinct_songs <- spotify_songs %>% distinct(track_name, track_artist, .keep_all = TRUE)
 
 ```
 
@@ -115,10 +114,10 @@ distinct_songs <- spotify_songs %>% distinct(track_name, track_artist)
 
 ```{r year released}
 
-spotify_songs$track_album_release_date <- ymd(spotify_songs$track_album_release_date, truncated = 2)
+distinct_songs$track_album_release_date <- ymd(distinct_songs$track_album_release_date, truncated = 2)
 
 
-spotify_songs <- spotify_songs %>% mutate(year_released = year(spotify_songs$track_album_release_date))
+distinct_songs <- distinct_songs %>% mutate(year_released = year(distinct_songs$track_album_release_date))
 
 ```
 
@@ -126,8 +125,40 @@ spotify_songs <- spotify_songs %>% mutate(year_released = year(spotify_songs$tra
 
 ```{r keep songs}
 
-after1980 <- spotify_songs %>% filter(year_released >= 1980)
+after1980 <- distinct_songs %>% filter(year_released >= 1980)
 
 ```
 
 ## 4. Add a new column with the duration of the song in minutes
+
+```{r}
+
+after1980 <- after1980 %>% mutate(duration_min = duration_ms/1000/60)
+
+after1980$duration_min[1:5]
+```
+
+## 5. For each year_released, calculate the mean of at least 6 of the audio features (e.g. danceability, energy, loudness, etc), or descriptors (e.g. tempo, duration in minutes, etc). (Hint: If all has gone well thus far, you should have a dataset with 41 rows and 7 columns).
+
+```{r mean of audio}
+after1980 <- after1980 %>% group_by(year_released) %>% summarize(danceability = mean(danceability), energy = mean(energy), loudness = mean(loudness), speechiness = mean(speechiness),acousticness = mean(acousticness), liveness = mean(liveness))
+                        
+after1980
+
+```
+
+## 6.Convert this wide dataset into a long dataset with a new feature and mean_score column
+
+```{r convert to long}
+
+after1980 <- after1980 %>% pivot_longer(-year_released, names_to = "feature", values_to = "mean_score")
+
+after1980
+
+```
+# Part 3: Data Visualization
+
+
+
+
+
