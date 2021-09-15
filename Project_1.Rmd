@@ -172,7 +172,7 @@ Use the functions in ggplot2 package to make a scatter plot of the six (or more)
 
 Consider playing around with the theme() function to make the figure shine, including playing with background colors, font, etc.
 
-```{r fig.cap=plotify}
+```{r fig.cap="plotify"}
 plotify <- after1980 %>% ggplot(aes(year_released, y = mean_score)) 
 
 plotify + geom_point() + 
@@ -190,7 +190,7 @@ plotify + geom_point() +
 
 I want you to explore your creative side and make a really awful data visualization in every way. :)
 
-```{r fig.cap=blahtify}
+```{r fig.cap="blahtify"}
 blahtify <- after1980 %>% ggplot(aes(year_released, y = mean_score))
 
 blahtify + geom_point(aes(shape = feature)) +
@@ -234,7 +234,6 @@ In your document, write 1 - 2 sentences about each different customization you a
     
     spotify_songs <- spotify_songs %>% mutate(genre_popularity = if_else(playlist_genre %in% c("latin","pop","rap"), "more_popular", "less_popular"))
     
-prop.table(table(spotify_songs$popularity, spotify_songs$playlist_genre))
     
 ## Develop plot
 
