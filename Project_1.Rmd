@@ -12,10 +12,15 @@ knitr::opts_chunk$set(echo = TRUE)
 # Set directory, load required packages, and import data
 
 ```{r load}
+library(here)
 
 here()
 
 library(tidyverse)
+
+library(lubridate)
+
+library(tidytuesdayR)
 
 #install.packages("tidytuesdayR")
 
@@ -141,7 +146,7 @@ after1980$duration_min[1:5]
 ## 5. For each year_released, calculate the mean of at least 6 of the audio features (e.g. danceability, energy, loudness, etc), or descriptors (e.g. tempo, duration in minutes, etc). (Hint: If all has gone well thus far, you should have a dataset with 41 rows and 7 columns).
 
 ```{r mean of audio}
-after1980 <- after1980 %>% group_by(year_released) %>% summarize(danceability = mean(danceability), energy = mean(energy), loudness = mean(loudness), speechiness = mean(speechiness),acousticness = mean(acousticness), liveness = mean(liveness))
+after1980 <- after1980 %>% group_by(year_released) %>% summarize(danceability = mean(danceability), energy = mean(energy), valence = mean(valence), speechiness = mean(speechiness),acousticness = mean(acousticness), liveness = mean(liveness))
                         
 after1980
 
@@ -158,7 +163,107 @@ after1980
 ```
 # Part 3: Data Visualization
 
+Use the functions in ggplot2 package to make a scatter plot of the six (or more) mean_scores (y-axis) over time (x-axis). For full credit, your plot should include:
+
+1. An overall title for the plot and a subtitle summarizing key trends that you found. Also include a caption in the figure with your name.
+2. Both the observed points for the mean_score, but also a smoothed non-linear pattern of the trend
+3. All six (or more) plots should be shown in the one figure
+4. There should be an informative x-axis and y-axis label
+
+Consider playing around with the theme() function to make the figure shine, including playing with background colors, font, etc.
+
+```{r fig.cap=plotify}
+plotify <- after1980 %>% ggplot(aes(year_released, y = mean_score)) 
+
+plotify + geom_point() + 
+    geom_smooth(method = "loess", color= "forest green") + 
+    facet_wrap(~feature) + 
+    labs(x = "Time (in years)", y = "Mean Audio Value", title="Audio Features Over Time") + 
+    theme_bw() + 
+    theme(panel.spacing.x = unit(1, "lines")) +
+    theme(text=element_text(family="serif", size = 14)) +
+    theme(plot.background = element_rect("light green"))
+
+```
+
+# Part 4: Make the worst plot you can!
+
+I want you to explore your creative side and make a really awful data visualization in every way. :)
+
+```{r fig.cap=blahtify}
+blahtify <- after1980 %>% ggplot(aes(year_released, y = mean_score))
+
+blahtify + geom_point(aes(shape = feature)) +
+    scale_shape(solid = FALSE) +
+    stat_ydensity(kernel = "gaussian", fill="light green") +
+    geom_path() +
+    theme_void() + 
+    labs(title="audio verus time") + 
+    annotate(geom = "text", x = 1997, y = 0.5, label = "I was born this year") +
+    geom_smooth() 
+    
+
+```
+
+In your document, write 1 - 2 sentences about each different customization you added (using bullets – i.e. there should be at least 7 bullet points each with 1-2 sentences), and how it could be useful for you when you want to make an awesome data visualization.
 
 
+* I customized each different feature and made the shapes transparent. This customization may be useful if I was interested in making my scatterplots more informative of a third variable. 
+
+* `stat_ydensity()`may be useful on its own if I was interested in visualizing the spread of data. For instance, I work with DNA methylation data, and this customization could be useful to see how methylated a site tends to be at baseline across a sample. 
+
+* `geom_path()` allowed me to connect the points by a line, which may be a useful customization if you were building a network of interactions. 
+
+* `theme_void()` got rid of the axes and tick marks, which could be useful if you were building shapes or 3D contours where the axes do not matter as much or add clutter to the information of interest. 
+
+* I added a vague title, but obviously the `labs` geom is very useful for adding textual information to figures when th description is better. 
+
+* I used `annotate()` to label an arbitrarily where my birthday is, but it could be used in better ways to label points of interest. For example, you could label an outlier with its participant ID number if you were considering removing it.
+
+* `geom_smooth()` does not show us anything very important in this particular figure, since we are plotting all features together in one figure. However, it could be more informative if we were interested in viewing the mean y values across x's. 
+
+# Part 5. Make my plot better
+
+1. You need to customize it in at least 7 ways to make it better.
 
 
+```{r make better}
+# Make a binary variable for track popularity for background 
+    mean(spotify_songs$track_popularity)
+    genres %>% summarize(mean(track_popularity))
+    
+    spotify_songs <- spotify_songs %>% mutate(genre_popularity = if_else(playlist_genre %in% c("latin","pop","rap"), "more_popular", "less_popular"))
+    
+prop.table(table(spotify_songs$popularity, spotify_songs$playlist_genre))
+    
+## Develop plot
+
+spotify_songs %>%
+    ggplot(aes(y=track_popularity, x=playlist_subgenre, fill = playlist_genre)) + 
+    geom_rect(aes(col = genre_popularity), fill="white", xmin = -Inf, ymin = -Inf, xmax=Inf, ymax=Inf, alpha = 0) +
+    geom_violin() +
+    facet_wrap( ~ playlist_genre, scales = "free_x") +
+    guides(x = guide_axis(angle = 25)) +
+    theme(text=element_text(family="serif", size = 12)) + 
+    labs(x="Track Popularity", y = "Playlist Subgenre") +
+    scale_fill_discrete(name = "Playlist Genre") +
+    scale_color_discrete(name = "Genre Comparative Popularity") + 
+    labs(title="Popularity of Spotify Songs by Genre")
+
+```
+
+2. In your document, write 1 - 2 sentences about each different customization you added (using bullets – i.e. there should be at least 7 bullet points each with 1-2 sentences), describing how you improved it.
+
+* First, I calculated which genres had average popularity ratings above the mean value for the whole dataset. I added `geom_rect()` to outline the facets with a color code that corresponds to genre popularity. 
+
+* I rotated the x labels using `guides()` function to make them more readable.
+
+* I also modified the font to make the rotated labels easier to read.
+
+* I changed the axis labels to so that the variables were more proper English than how they originally appeared as variables in the data-set. 
+
+* I changed the fill legend title. 
+
+* I changed the color legend title. Keeping the legends separate is the main reason why I decided to use the 'color' function in ggplot for the genre popularity variable instead of 'fill'. 
+
+* I added a title to the plot to describe what data is being portrayed. 
